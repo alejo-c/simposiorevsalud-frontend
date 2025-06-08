@@ -7,7 +7,7 @@ pub struct RegisterRequest {
     pub identification: String,
     pub password: String,
     pub role: String,
-    pub hours: u32,
+    pub hours: u8,
     pub attendance: String,
 }
 
@@ -32,7 +32,7 @@ pub struct AdminUpdateUserRequest {
     pub identification: String,
     pub password: String,
     pub role: String,
-    pub hours: u32,
+    pub hours: u8,
     pub attendance: String,
 }
 
@@ -43,7 +43,7 @@ pub struct DeleteUserRequest {
     pub identification: String,
     pub password: String,
     pub role: String,
-    pub hours: u32,
+    pub hours: u8,
     pub attendance: String,
 }
 
@@ -54,7 +54,7 @@ pub struct User {
     pub full_name: String,
     pub identification: String,
     pub role: UserRole,
-    pub hours: Option<u32>,
+    pub hours: Option<u8>,
     pub attendance: String,
     pub cert_generated: CertificateStatus,
 }
@@ -68,7 +68,7 @@ pub enum UserRole {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpeakerInfo {
-    pub hours: u32,
+    pub hours: u8,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

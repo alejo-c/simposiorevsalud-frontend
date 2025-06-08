@@ -77,7 +77,7 @@ pub fn login() -> Html {
     html! {
         <>
             <h1>{"Ingreso"}</h1>
-            <section>
+            <article>
                 <form onsubmit={on_submit}>
                     <div class="form-group">
                         <label for="email-input">{"Correo electrónico:"}</label>
@@ -109,7 +109,7 @@ pub fn login() -> Html {
                     </div>
                     <button type="submit" id="login-btn">{"Ingresar"}</button>
                 </form>
-            </section>
+            </article>
         </>
     }
 }

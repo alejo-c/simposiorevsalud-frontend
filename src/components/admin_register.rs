@@ -14,7 +14,7 @@ pub fn admin_register() -> Html {
     let password = use_state(|| String::new());
     let repeated_password = use_state(|| String::new());
     let role = use_state(|| "attendee".to_string());
-    let hours = use_state(|| 0u32);
+    let hours = use_state(|| 0u8);
     let attendance = use_state(|| "remote".to_string());
     let message = use_state(|| String::new());
 
@@ -109,7 +109,7 @@ pub fn admin_register() -> Html {
         let message = message.clone();
         Callback::from(move |e: Event| {
             let input: HtmlInputElement = e.target_unchecked_into();
-            if let Ok(value) = input.value().parse::<u32>() {
+            if let Ok(value) = input.value().parse::<u8>() {
                 hours.set(value);
             }
             message.set(String::new());
