@@ -13,7 +13,7 @@ pub fn home() -> Html {
 
             <nav>
                 <figure>
-                    <img src="img/banner.png" alt="Banner" />
+                    <img src="static/img/banner.png" alt="Banner" />
                 </figure>
             </nav>
 
@@ -23,7 +23,7 @@ pub fn home() -> Html {
 
                 <section>
                     <figure>
-                        <img src="img/flyer.png" alt="Flyer" />
+                        <img src="static/img/flyer.png" alt="Flyer" />
                     </figure>
                 </section>
             </article>
