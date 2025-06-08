@@ -20,13 +20,16 @@ pub fn profile() -> Html {
     {
         let full_name = full_name.clone();
         let identification = identification.clone();
-        use_effect_with((), move |_| {
-            // In a real app, you'd fetch current user data here
-            // For now, we'll just set empty values
-            full_name.set(String::new());
-            identification.set(String::new());
-            || ()
-        });
+        use_effect_with_deps(
+            move |_| {
+                // In a real app, you'd fetch current user data here
+                // For now, we'll just set empty values
+                full_name.set(String::new());
+                identification.set(String::new());
+                || ()
+            },
+            (),
+        );
     }
 
     let on_email_change = {

@@ -21,8 +21,8 @@ pub enum Route {
     AdminUsers,
 }
 
-pub fn switch(routes: Route) -> Html {
-    match routes {
+pub fn switch(route: Route) -> Html {
+    match route {
         Route::Home => html! { <Home /> },
         Route::Register => html! { <Register /> },
         Route::Login => html! { <Login /> },

@@ -10,8 +10,6 @@ use yew_router::prelude::*;
 
 #[function_component(App)]
 fn app() -> Html {
-    console_log::init_with_level(log::Level::Debug).expect("Failed to init logger");
-
     html! {
         <BrowserRouter>
             <Switch<Route> render={switch} />
@@ -20,5 +18,6 @@ fn app() -> Html {
 }
 
 fn main() {
+    console_log::init_with_level(log::Level::Debug).expect("Failed to init logger");
     yew::Renderer::<App>::new().render();
 }

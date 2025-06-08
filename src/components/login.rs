@@ -11,7 +11,7 @@ use crate::utils::validate_password;
 
 #[function_component(Login)]
 pub fn login() -> Html {
-    let navigator = use_navigator().expect("Navigator not found");
+    let navigator = use_navigator().unwrap();
     let email = use_state(|| String::new());
     let password = use_state(|| String::new());
     let message = use_state(|| String::new());
