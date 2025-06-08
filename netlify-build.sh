@@ -21,3 +21,8 @@ fi
 
 # Build
 trunk build --release
+
+# Copy static assets into the dist folder
+cp -r static/styles dist/
+cp -r static/img dist/
+cp static/_redirects dist/
