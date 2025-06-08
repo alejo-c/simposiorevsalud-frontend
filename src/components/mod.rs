@@ -6,6 +6,7 @@ pub mod home;
 pub mod login;
 pub mod not_found;
 pub mod profile;
+pub mod protected_route;
 pub mod register;
 
 pub use admin_register::AdminRegister;
@@ -16,4 +17,5 @@ pub use home::Home;
 pub use login::Login;
 pub use not_found::NotFound;
 pub use profile::Profile;
+pub use protected_route::ProtectedRoute;
 pub use register::Register;

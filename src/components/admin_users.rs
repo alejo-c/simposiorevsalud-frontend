@@ -1,11 +1,10 @@
 use wasm_bindgen_futures::spawn_local;
-use web_sys::HtmlElement;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
 use crate::routes::Route;
 use crate::services::api::ApiService;
-use crate::types::{User, UserRole};
+use crate::types::{DeleteUserRequest, User, UserRole};
 
 #[function_component(AdminUsers)]
 pub fn admin_users() -> Html {
@@ -153,12 +152,12 @@ pub fn admin_users() -> Html {
     };
 
     html! {
-        <>
+        <div class="container">
             <h1>{"Administrar usuarios"}</h1>
             <article>
-                <section id="buttons-section">
-                    <button id="register-btn" onclick={on_register_click}>{"Registrar"}</button>
-                    <button id="reload-btn" onclick={on_reload_click}>{"Actualizar lista"}</button>
+                <section id="buttons-section" class="admin-actions">
+                    <button id="register-btn" class="btn" onclick={on_register_click}>{"Registrar"}</button>
+                    <button id="reload-btn" class="btn btn-outline" onclick={on_reload_click}>{"Actualizar lista"}</button>
                 </section>
 
                 <section id="table-section">
@@ -207,20 +206,22 @@ pub fn admin_users() -> Html {
                                                 <td>{get_cert_display(user.cert_generated.horizontal)}</td>
                                                 <td>{get_cert_display(user.cert_generated.vertical)}</td>
                                                 <td>
-                                                    <Link<Route> to={Route::AdminUpdate { id: user.id.clone() }}>
-                                                        <button class="btn btn-sm">{"Editar"}</button>
-                                                    </Link<Route>>
-                                                    <button
-                                                        class="btn btn-danger btn-sm"
-                                                        onclick={move |_| on_delete_click.emit(user_clone.clone())}
-                                                        disabled={is_deleting}
-                                                    >
-                                                        {if is_deleting {
-                                                            html! { <span class="spinner" style="width: 1rem; height: 1rem;"></span> }
-                                                        } else {
-                                                            html! { {"Eliminar"} }
-                                                        }}
-                                                    </button>
+                                                    <div class="admin-actions" style="gap: 0.5rem;">
+                                                        <Link<Route> to={Route::AdminUpdate { id: user.id.clone() }}>
+                                                            <button class="btn btn-sm">{"Editar"}</button>
+                                                        </Link<Route>>
+                                                        <button
+                                                            class="btn btn-danger btn-sm"
+                                                            onclick={move |_| on_delete.emit(user_clone.clone())}
+                                                            disabled={is_deleting}
+                                                        >
+                                                            {if is_deleting {
+                                                                html! { <span class="spinner" style="width: 1rem; height: 1rem;"></span> }
+                                                            } else {
+                                                                html! { {"Eliminar"} }
+                                                            }}
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         }
@@ -231,10 +232,16 @@ pub fn admin_users() -> Html {
                     </table>
                 </section>
 
-                <div>
-                    <span id="message-span">{(*message).clone()}</span>
-                </div>
+                {if !message.is_empty() {
+                    html! {
+                        <div>
+                            <span id="message-span">{(*message).clone()}</span>
+                        </div>
+                    }
+                } else {
+                    html! {}
+                }}
             </article>
-        </>
+        </div>
     }
 }

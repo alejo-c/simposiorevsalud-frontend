@@ -28,14 +28,37 @@ pub enum Route {
 
 pub fn switch(route: Route) -> Html {
     match route {
+        // Public routes
         Route::Home => html! { <Home /> },
         Route::Register => html! { <Register /> },
         Route::Login => html! { <Login /> },
-        Route::Profile => html! { <Profile /> },
-        Route::Certificates => html! { <Certificates /> },
-        Route::AdminUsers => html! { <AdminUsers /> },
-        Route::AdminRegister => html! { <AdminRegister /> },
-        Route::AdminUpdate { id } => html! { <AdminUpdate user_id={id} /> },
-        Route::NotFound => html! { <NotFound />},
+        Route::NotFound => html! { <NotFound /> },
+
+        // Protected routes
+        Route::Profile => html! {
+            <ProtectedRoute>
+                <Profile />
+            </ProtectedRoute>
+        },
+        Route::Certificates => html! {
+            <ProtectedRoute>
+                <Certificates />
+            </ProtectedRoute>
+        },
+        Route::AdminUsers => html! {
+            <ProtectedRoute>
+                <AdminUsers />
+            </ProtectedRoute>
+        },
+        Route::AdminRegister => html! {
+            <ProtectedRoute>
+                <AdminRegister />
+            </ProtectedRoute>
+        },
+        Route::AdminUpdate { id } => html! {
+            <ProtectedRoute>
+                <AdminUpdate user_id={id} />
+            </ProtectedRoute>
+        },
     }
 }
