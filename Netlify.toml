@@ -6,3 +6,6 @@
   RUSTUP_HOME = "/opt/buildhome/.rustup"
   CARGO_HOME = "/opt/buildhome/.cargo"
   PATH = "/opt/buildhome/.cargo/bin:/opt/buildhome/.rustup/bin:/usr/local/bin:/usr/bin:/bin"
+
+[[plugins]]
+  package = "@netlify/cache-utils"
