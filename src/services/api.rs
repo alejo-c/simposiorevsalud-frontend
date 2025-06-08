@@ -158,6 +158,7 @@ impl ApiService {
 
         let response = Request::post(&url)
             .body(id)
+            .map_err(|e| format!("Request error: {}", e))?
             .send()
             .await
             .map_err(|e| format!("Network error: {}", e))?;

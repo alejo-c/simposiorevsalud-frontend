@@ -1,13 +1,13 @@
 use wasm_bindgen_futures::spawn_local;
-use web_sys::HtmlInputElement;
+use web_sys::{HtmlInputElement, HtmlSelectElement};
 use yew::prelude::*;
 
 use crate::services::api::ApiService;
-use crate::types::RegisterRequest;
+use crate::types::UpdateUserRequest;
 use crate::utils::validate_password;
 
-#[function_component(Register)]
-pub fn register() -> Html {
+#[function_component(Profile)]
+pub fn profile() -> Html {
     let email = use_state(|| String::new());
     let full_name = use_state(|| String::new());
     let identification = use_state(|| String::new());
@@ -16,32 +16,25 @@ pub fn register() -> Html {
     let attendance = use_state(|| "remote".to_string());
     let message = use_state(|| String::new());
 
+    // Fill form with existing user data on mount
+    {
+        let full_name = full_name.clone();
+        let identification = identification.clone();
+        use_effect_with((), move |_| {
+            // In a real app, you'd fetch current user data here
+            // For now, we'll just set empty values
+            full_name.set(String::new());
+            identification.set(String::new());
+            || ()
+        });
+    }
+
     let on_email_change = {
         let email = email.clone();
         let message = message.clone();
         Callback::from(move |e: Event| {
             let input: HtmlInputElement = e.target_unchecked_into();
             email.set(input.value());
-            message.set(String::new());
-        })
-    };
-
-    let on_full_name_change = {
-        let full_name = full_name.clone();
-        let message = message.clone();
-        Callback::from(move |e: Event| {
-            let input: HtmlInputElement = e.target_unchecked_into();
-            full_name.set(input.value());
-            message.set(String::new());
-        })
-    };
-
-    let on_identification_change = {
-        let identification = identification.clone();
-        let message = message.clone();
-        Callback::from(move |e: Event| {
-            let input: HtmlInputElement = e.target_unchecked_into();
-            identification.set(input.value());
             message.set(String::new());
         })
     };
@@ -69,15 +62,13 @@ pub fn register() -> Html {
     let on_attendance_change = {
         let attendance = attendance.clone();
         Callback::from(move |e: Event| {
-            let input: HtmlInputElement = e.target_unchecked_into();
-            attendance.set(input.value());
+            let select: HtmlSelectElement = e.target_unchecked_into();
+            attendance.set(select.value());
         })
     };
 
     let on_submit = {
         let email = email.clone();
-        let full_name = full_name.clone();
-        let identification = identification.clone();
         let password = password.clone();
         let repeated_password = repeated_password.clone();
         let attendance = attendance.clone();
@@ -87,8 +78,6 @@ pub fn register() -> Html {
             e.prevent_default();
 
             let email_val = (*email).clone();
-            let full_name_val = (*full_name).clone();
-            let identification_val = (*identification).clone();
             let password_val = (*password).clone();
             let repeated_password_val = (*repeated_password).clone();
             let attendance_val = (*attendance).clone();
@@ -104,21 +93,17 @@ pub fn register() -> Html {
                 return;
             }
 
-            let data = RegisterRequest {
+            let data = UpdateUserRequest {
                 email: email_val,
-                full_name: full_name_val,
-                identification: identification_val,
                 password: password_val,
-                role: "attendee".to_string(),
-                hours: 0,
                 attendance: attendance_val,
             };
 
             spawn_local(async move {
-                match ApiService::register(data).await {
+                match ApiService::update_user(data).await {
                     Ok(response) => {
                         log::info!("Success: {}", response);
-                        message.set("Registro exitoso".to_string());
+                        message.set("Perfil actualizado exitosamente".to_string());
                     }
                     Err(error) => {
                         message.set(error);
@@ -130,10 +115,9 @@ pub fn register() -> Html {
 
     html! {
         <>
-            <h1>{"Registro"}</h1>
-
+            <h1>{"Perfil"}</h1>
             <section>
-                <form onsubmit={on_submit}>
+                <form id="profile-form" onsubmit={on_submit}>
                     <div class="form-group">
                         <label for="email-input">{"Correo electrónico:"}</label>
                         <input
@@ -152,9 +136,8 @@ pub fn register() -> Html {
                             type="text"
                             id="full-name-input"
                             class="form-input"
-                            required={true}
+                            disabled={true}
                             value={(*full_name).clone()}
-                            onchange={on_full_name_change}
                         />
                     </div>
                     <div class="form-group">
@@ -163,9 +146,8 @@ pub fn register() -> Html {
                             type="text"
                             id="id-input"
                             class="form-input"
-                            required={true}
+                            disabled={true}
                             value={(*identification).clone()}
-                            onchange={on_identification_change}
                         />
                     </div>
                     <div class="form-group">
@@ -204,7 +186,7 @@ pub fn register() -> Html {
                         <span id="message-span">{(*message).clone()}</span>
                     </div>
 
-                    <button type="submit" id="register-btn">{"Registrarse"}</button>
+                    <button type="submit" id="register-btn">{"Actualizar"}</button>
                 </form>
             </section>
         </>
