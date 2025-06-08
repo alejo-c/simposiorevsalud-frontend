@@ -8,7 +8,7 @@ use crate::types::{User, UserRole};
 
 #[function_component(AdminUsers)]
 pub fn admin_users() -> Html {
-    let navigator = use_navigator().unwrap();
+    let navigator = use_navigator().expect("Navigator not found");
     let users = use_state(|| Vec::<User>::new());
     let message = use_state(|| String::new());
 
@@ -16,21 +16,24 @@ pub fn admin_users() -> Html {
     {
         let users = users.clone();
         let message = message.clone();
-        use_effect_with((), move |_| {
-            let users = users.clone();
-            let message = message.clone();
-            spawn_local(async move {
-                match ApiService::admin_get_users().await {
-                    Ok(user_list) => {
-                        users.set(user_list);
+        use_effect_with_deps(
+            move |_| {
+                let users = users.clone();
+                let message = message.clone();
+                spawn_local(async move {
+                    match ApiService::admin_get_users().await {
+                        Ok(user_list) => {
+                            users.set(user_list);
+                        }
+                        Err(error) => {
+                            message.set(error);
+                        }
                     }
-                    Err(error) => {
-                        message.set(error);
-                    }
-                }
-            });
-            || ()
-        });
+                });
+                || ()
+            },
+            (),
+        );
     }
 
     let on_register_click = {

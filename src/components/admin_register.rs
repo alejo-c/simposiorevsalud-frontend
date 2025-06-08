@@ -29,18 +29,21 @@ pub fn admin_register() -> Html {
         let hours = hours.clone();
         let attendance = attendance.clone();
 
-        use_effect_with((), move |_| {
-            // Populate test data
-            email.set("test@gmail.com".to_string());
-            full_name.set("Test Example".to_string());
-            identification.set("1234567890".to_string());
-            password.set("T3stexampl*".to_string());
-            repeated_password.set("T3stexampl*".to_string());
-            role.set("attendee".to_string());
-            hours.set(2);
-            attendance.set("remote".to_string());
-            || ()
-        });
+        use_effect_with_deps(
+            move |_| {
+                // Populate test data
+                email.set("test@gmail.com".to_string());
+                full_name.set("Test Example".to_string());
+                identification.set("1234567890".to_string());
+                password.set("T3stexampl*".to_string());
+                repeated_password.set("T3stexampl*".to_string());
+                role.set("attendee".to_string());
+                hours.set(2);
+                attendance.set("remote".to_string());
+                || ()
+            },
+            (),
+        );
     }
 
     let on_email_change = {
@@ -254,7 +257,7 @@ pub fn admin_register() -> Html {
                         </select>
                     </div>
 
-                    <div class={classes!("form-group", if *role != "speaker" { Some("hidden") } else { None })}>
+                    <div class={if *role != "speaker" { "form-group hidden" } else { "form-group" }}>
                         <label for="hours-input">{"Cantidad de horas de la ponencia (0 por defecto):"}</label>
                         <input
                             type="number"
