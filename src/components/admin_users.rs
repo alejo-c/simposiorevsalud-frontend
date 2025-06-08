@@ -1,109 +1,55 @@
 use wasm_bindgen_futures::spawn_local;
-use web_sys::{HtmlInputElement, HtmlSelectElement};
 use yew::prelude::*;
+use yew_router::prelude::*;
 
+use crate::routes::Route;
 use crate::services::api::ApiService;
-use crate::types::UpdateUserRequest;
-use crate::utils::validate_password;
+use crate::types::{User, UserRole};
 
-#[function_component(Profile)]
-pub fn profile() -> Html {
-    let email = use_state(|| String::new());
-    let full_name = use_state(|| String::new());
-    let identification = use_state(|| String::new());
-    let password = use_state(|| String::new());
-    let repeated_password = use_state(|| String::new());
-    let attendance = use_state(|| "remote".to_string());
+#[function_component(AdminUsers)]
+pub fn admin_users() -> Html {
+    let navigator = use_navigator().unwrap();
+    let users = use_state(|| Vec::<User>::new());
     let message = use_state(|| String::new());
 
-    // Fill form with existing user data on mount
+    // Load users on component mount
     {
-        let full_name = full_name.clone();
-        let identification = identification.clone();
+        let users = users.clone();
+        let message = message.clone();
         use_effect_with((), move |_| {
-            // In a real app, you'd fetch current user data here
-            // For now, we'll just set empty values
-            full_name.set(String::new());
-            identification.set(String::new());
+            let users = users.clone();
+            let message = message.clone();
+            spawn_local(async move {
+                match ApiService::admin_get_users().await {
+                    Ok(user_list) => {
+                        users.set(user_list);
+                    }
+                    Err(error) => {
+                        message.set(error);
+                    }
+                }
+            });
             || ()
         });
     }
 
-    let on_email_change = {
-        let email = email.clone();
-        let message = message.clone();
-        Callback::from(move |e: Event| {
-            let input: HtmlInputElement = e.target_unchecked_into();
-            email.set(input.value());
-            message.set(String::new());
+    let on_register_click = {
+        let navigator = navigator.clone();
+        Callback::from(move |_: MouseEvent| {
+            navigator.push(&Route::AdminRegister);
         })
     };
 
-    let on_password_change = {
-        let password = password.clone();
+    let on_reload_click = {
+        let users = users.clone();
         let message = message.clone();
-        Callback::from(move |e: Event| {
-            let input: HtmlInputElement = e.target_unchecked_into();
-            password.set(input.value());
-            message.set(String::new());
-        })
-    };
-
-    let on_repeated_password_change = {
-        let repeated_password = repeated_password.clone();
-        let message = message.clone();
-        Callback::from(move |e: Event| {
-            let input: HtmlInputElement = e.target_unchecked_into();
-            repeated_password.set(input.value());
-            message.set(String::new());
-        })
-    };
-
-    let on_attendance_change = {
-        let attendance = attendance.clone();
-        Callback::from(move |e: Event| {
-            let select: HtmlSelectElement = e.target_unchecked_into();
-            attendance.set(select.value());
-        })
-    };
-
-    let on_submit = {
-        let email = email.clone();
-        let password = password.clone();
-        let repeated_password = repeated_password.clone();
-        let attendance = attendance.clone();
-        let message = message.clone();
-
-        Callback::from(move |e: SubmitEvent| {
-            e.prevent_default();
-
-            let email_val = (*email).clone();
-            let password_val = (*password).clone();
-            let repeated_password_val = (*repeated_password).clone();
-            let attendance_val = (*attendance).clone();
+        Callback::from(move |_: MouseEvent| {
+            let users = users.clone();
             let message = message.clone();
-
-            if !validate_password(&password_val) || !validate_password(&repeated_password_val) {
-                message.set("Contraseña no valida".to_string());
-                return;
-            }
-
-            if password_val != repeated_password_val {
-                message.set("Contraseñas no coinciden".to_string());
-                return;
-            }
-
-            let data = UpdateUserRequest {
-                email: email_val,
-                password: password_val,
-                attendance: attendance_val,
-            };
-
             spawn_local(async move {
-                match ApiService::update_user(data).await {
-                    Ok(response) => {
-                        log::info!("Success: {}", response);
-                        message.set("Perfil actualizado exitosamente".to_string());
+                match ApiService::admin_get_users().await {
+                    Ok(user_list) => {
+                        users.set(user_list);
                     }
                     Err(error) => {
                         message.set(error);
@@ -113,82 +59,104 @@ pub fn profile() -> Html {
         })
     };
 
+    // Helper functions
+    let get_role_display = |user: &User| -> (String, String) {
+        match &user.role {
+            UserRole::Simple(role_str) => {
+                let display = match role_str.as_str() {
+                    "webmaster" => "Administrador",
+                    "staff" => "Organizador",
+                    "attendee" => "Asistente",
+                    _ => "Asistente",
+                };
+                (display.to_string(), "-".to_string())
+            }
+            UserRole::Speaker { speaker } => ("Ponente".to_string(), speaker.hours.to_string()),
+        }
+    };
+
+    let get_attendance_display = |attendance: &str| -> &str {
+        match attendance {
+            "presential" => "Presencial",
+            _ => "Remota",
+        }
+    };
+
+    let get_cert_display = |generated: bool| -> &str {
+        if generated {
+            "Sí"
+        } else {
+            "No"
+        }
+    };
+
     html! {
         <>
-            <h1>{"Perfil"}</h1>
-            <section>
-                <form id="profile-form" onsubmit={on_submit}>
-                    <div class="form-group">
-                        <label for="email-input">{"Correo electrónico:"}</label>
-                        <input
-                            type="email"
-                            id="email-input"
-                            class="form-input"
-                            required={true}
-                            minlength="5"
-                            value={(*email).clone()}
-                            onchange={on_email_change}
-                        />
-                    </div>
-                    <div class="form-group">
-                        <label for="full-name-input">{"Nombre completo:"}</label>
-                        <input
-                            type="text"
-                            id="full-name-input"
-                            class="form-input"
-                            disabled={true}
-                            value={(*full_name).clone()}
-                        />
-                    </div>
-                    <div class="form-group">
-                        <label for="id-input">{"Documento de identificación:"}</label>
-                        <input
-                            type="text"
-                            id="id-input"
-                            class="form-input"
-                            disabled={true}
-                            value={(*identification).clone()}
-                        />
-                    </div>
-                    <div class="form-group">
-                        <label for="password-input">{"Contraseña:"}</label>
-                        <input
-                            type="password"
-                            id="password-input"
-                            class="form-input"
-                            required={true}
-                            minlength="8"
-                            value={(*password).clone()}
-                            onchange={on_password_change}
-                        />
-                    </div>
-                    <div class="form-group">
-                        <label for="repeat-password-input">{"Repita contraseña:"}</label>
-                        <input
-                            type="password"
-                            id="repeat-password-input"
-                            class="form-input"
-                            required={true}
-                            minlength="8"
-                            value={(*repeated_password).clone()}
-                            onchange={on_repeated_password_change}
-                        />
-                    </div>
-                    <div class="form-group">
-                        <label for="attendance-select">{"Tipo de asistencia:"}</label>
-                        <select id="attendance-select" value={(*attendance).clone()} onchange={on_attendance_change}>
-                            <option value="remote">{"Remota"}</option>
-                            <option value="presential">{"Presencial"}</option>
-                        </select>
-                    </div>
+            <h1>{"Administrar usuarios"}</h1>
+            <article>
+                <section id="buttons-section">
+                    <button id="register-btn" onclick={on_register_click}>{"Registrar"}</button>
+                    <button id="reload-btn" onclick={on_reload_click}>{"Actualizar lista"}</button>
+                </section>
 
-                    <div>
-                        <span id="message-span">{(*message).clone()}</span>
-                    </div>
+                <section id="table-section">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th rowspan="2">{"SID"}</th>
+                                <th rowspan="2">{"E-mail"}</th>
+                                <th rowspan="2">{"Nombre"}</th>
+                                <th rowspan="2">{"Identificación"}</th>
+                                <th rowspan="2">{"Rol"}</th>
+                                <th rowspan="2">{"Horas"}</th>
+                                <th rowspan="2">{"Asistencia"}</th>
+                                <th colspan="2">{"Constancias generadas"}</th>
+                                <th rowspan="2">{"Acciones"}</th>
+                            </tr>
+                            <tr>
+                                <th>{"Horizontal"}</th>
+                                <th>{"Vertical"}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-list">
+                            {
+                                if users.is_empty() {
+                                    html! {
+                                        <tr>
+                                            <td colspan="10">{"Todavía no hay usuarios"}</td>
+                                        </tr>
+                                    }
+                                } else {
+                                    users.iter().map(|user| {
+                                        let (role_display, hours_display) = get_role_display(user);
 
-                    <button type="submit" id="register-btn">{"Actualizar"}</button>
-                </form>
-            </section>
+                                        html! {
+                                            <tr key={user.id.clone()}>
+                                                <td>{&user.id}</td>
+                                                <td>{&user.email}</td>
+                                                <td>{&user.full_name}</td>
+                                                <td>{&user.identification}</td>
+                                                <td>{role_display}</td>
+                                                <td>{hours_display}</td>
+                                                <td>{get_attendance_display(&user.attendance)}</td>
+                                                <td>{get_cert_display(user.cert_generated.horizontal)}</td>
+                                                <td>{get_cert_display(user.cert_generated.vertical)}</td>
+                                                <td>
+                                                    <button>{"Editar"}</button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }).collect::<Html>()
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </section>
+
+                <div>
+                    <span id="message-span">{(*message).clone()}</span>
+                </div>
+            </article>
         </>
     }
 }

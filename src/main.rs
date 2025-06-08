@@ -13,9 +13,9 @@ fn app() -> Html {
     console_log::init_with_level(log::Level::Debug).expect("Failed to init logger");
 
     html! {
-        <HashRouter>
+        <BrowserRouter>
             <Switch<Route> render={switch} />
-        </HashRouter>
+        </BrowserRouter>
     }
 }
 
