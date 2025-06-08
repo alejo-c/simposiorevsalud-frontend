@@ -5,9 +5,9 @@ edition = "2021"
 
 [dependencies]
 console_log = "1.0.0"
-gloo-net = { version = "0.6.0", features = ["http"] }
-gloo-storage = "0.3.0"
-gloo-utils = "0.2.0"
+gloo-net = { version = "0.2", features = ["http"] }
+gloo-storage = "0.2"
+gloo-utils = "0.1"
 log = "0.4.27"
 regex = "1.11.1"
 reqwest = { version = "0.12.19", features = ["json"] }
