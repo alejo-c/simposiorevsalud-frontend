@@ -5,7 +5,7 @@ use yew_router::prelude::*;
 
 use crate::routes::Route;
 use crate::services::api::ApiService;
-use crate::types::{User, UserRole, AdminUpdateUserRequest, DeleteUserRequest};
+use crate::types::{AdminUpdateUserRequest, DeleteUserRequest, User, UserRole};
 use crate::utils::validate_password;
 
 #[function_component(AdminUsers)]
@@ -14,7 +14,7 @@ pub fn admin_users() -> Html {
     let users = use_state(|| Vec::<User>::new());
     let message = use_state(|| String::new());
     let show_update_modal = use_state(|| false);
-    
+
     // Update form state
     let sid_input = use_state(|| String::new());
     let email = use_state(|| String::new());
@@ -102,7 +102,7 @@ pub fn admin_users() -> Html {
                         email.set(user.email);
                         full_name.set(user.full_name);
                         identification.set(user.identification);
-                        
+
                         match user.role {
                             UserRole::Simple(role_str) => {
                                 role.set(role_str);
@@ -113,7 +113,7 @@ pub fn admin_users() -> Html {
                                 hours.set(speaker.hours);
                             }
                         }
-                        
+
                         attendance.set(user.attendance);
                         show_update_modal.set(true);
                     }
@@ -196,6 +196,73 @@ pub fn admin_users() -> Html {
         })
     };
 
+    // Event handlers for form inputs
+    let on_email_change = {
+        let email = email.clone();
+        Callback::from(move |e: Event| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            email.set(input.value());
+        })
+    };
+
+    let on_full_name_change = {
+        let full_name = full_name.clone();
+        Callback::from(move |e: Event| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            full_name.set(input.value());
+        })
+    };
+
+    let on_identification_change = {
+        let identification = identification.clone();
+        Callback::from(move |e: Event| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            identification.set(input.value());
+        })
+    };
+
+    let on_password_change = {
+        let password = password.clone();
+        Callback::from(move |e: Event| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            password.set(input.value());
+        })
+    };
+
+    let on_repeated_password_change = {
+        let repeated_password = repeated_password.clone();
+        Callback::from(move |e: Event| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            repeated_password.set(input.value());
+        })
+    };
+
+    let on_role_change = {
+        let role = role.clone();
+        Callback::from(move |e: Event| {
+            let select: HtmlSelectElement = e.target_unchecked_into();
+            role.set(select.value());
+        })
+    };
+
+    let on_hours_change = {
+        let hours = hours.clone();
+        Callback::from(move |e: Event| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            if let Ok(value) = input.value().parse::<u32>() {
+                hours.set(value);
+            }
+        })
+    };
+
+    let on_attendance_change = {
+        let attendance = attendance.clone();
+        Callback::from(move |e: Event| {
+            let select: HtmlSelectElement = e.target_unchecked_into();
+            attendance.set(select.value());
+        })
+    };
+
     // Helper functions
     let get_role_display = |user: &User| -> (String, String) {
         match &user.role {
@@ -208,9 +275,7 @@ pub fn admin_users() -> Html {
                 };
                 (display.to_string(), "-".to_string())
             }
-            UserRole::Speaker { speaker } => {
-                ("Ponente".to_string(), speaker.hours.to_string())
-            }
+            UserRole::Speaker { speaker } => ("Ponente".to_string(), speaker.hours.to_string()),
         }
     };
 
@@ -222,7 +287,11 @@ pub fn admin_users() -> Html {
     };
 
     let get_cert_display = |generated: bool| -> &str {
-        if generated { "Sí" } else { "No" }
+        if generated {
+            "Sí"
+        } else {
+            "No"
+        }
     };
 
     html! {
@@ -264,4 +333,110 @@ pub fn admin_users() -> Html {
                                 } else {
                                     users.iter().map(|user| {
                                         let (role_display, hours_display) = get_role_display(user);
-                                        let user_id =
+                                        let user_id = user.id.clone();
+                                        let edit_callback = {
+                                            let on_edit_click = on_edit_click.clone();
+                                            let user_id = user_id.clone();
+                                            Callback::from(move |_: MouseEvent| {
+                                                on_edit_click.emit(user_id.clone());
+                                            })
+                                        };
+
+                                        html! {
+                                            <tr key={user.id.clone()}>
+                                                <td>{&user.id}</td>
+                                                <td>{&user.email}</td>
+                                                <td>{&user.full_name}</td>
+                                                <td>{&user.identification}</td>
+                                                <td>{role_display}</td>
+                                                <td>{hours_display}</td>
+                                                <td>{get_attendance_display(&user.attendance)}</td>
+                                                <td>{get_cert_display(user.cert_generated.horizontal)}</td>
+                                                <td>{get_cert_display(user.cert_generated.vertical)}</td>
+                                                <td>
+                                                    <button onclick={edit_callback}>{"Editar"}</button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }).collect::<Html>()
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </section>
+
+                // Update Modal
+                if *show_update_modal {
+                    <div class="modal">
+                        <div class="modal-content">
+                            <h2>{"Actualizar Usuario"}</h2>
+                            <form onsubmit={on_update_submit}>
+                                <div class="form-group">
+                                    <label>{"SID:"}</label>
+                                    <input type="text" value={(*sid_input).clone()} disabled={true} />
+                                </div>
+                                <div class="form-group">
+                                    <label>{"Email:"}</label>
+                                    <input type="email" value={(*email).clone()} onchange={on_email_change} />
+                                </div>
+                                <div class="form-group">
+                                    <label>{"Nombre completo:"}</label>
+                                    <input type="text" value={(*full_name).clone()} onchange={on_full_name_change} />
+                                </div>
+                                <div class="form-group">
+                                    <label>{"Identificación:"}</label>
+                                    <input type="text" value={(*identification).clone()} onchange={on_identification_change} />
+                                </div>
+                                <div class="form-group">
+                                    <label>{"Contraseña:"}</label>
+                                    <input type="password" value={(*password).clone()} onchange={on_password_change} />
+                                </div>
+                                <div class="form-group">
+                                    <label>{"Repetir contraseña:"}</label>
+                                    <input type="password" value={(*repeated_password).clone()} onchange={on_repeated_password_change} />
+                                </div>
+                                <div class="form-group">
+                                    <label>{"Rol:"}</label>
+                                    <select value={(*role).clone()} onchange={on_role_change}>
+                                        <option value="attendee">{"Asistente"}</option>
+                                        <option value="speaker">{"Ponente"}</option>
+                                        <option value="staff">{"Organizador"}</option>
+                                    </select>
+                                </div>
+                                {
+                                    if *role == "speaker" {
+                                        html! {
+                                            <div class="form-group">
+                                                <label>{"Horas:"}</label>
+                                                <input type="number" value={hours.to_string()} onchange={on_hours_change} />
+                                            </div>
+                                        }
+                                    } else {
+                                        html! {}
+                                    }
+                                }
+                                <div class="form-group">
+                                    <label>{"Asistencia:"}</label>
+                                    <select value={(*attendance).clone()} onchange={on_attendance_change}>
+                                        <option value="remote">{"Remota"}</option>
+                                        <option value="presential">{"Presencial"}</option>
+                                    </select>
+                                </div>
+                                <div class="modal-buttons">
+                                    <button type="submit">{"Actualizar"}</button>
+                                    <button type="button" onclick={on_cancel_modal}>{"Cancelar"}</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                } else {
+                    html! {}
+                }
+
+                <div>
+                    <span id="message-span">{(*message).clone()}</span>
+                </div>
+            </article>
+        </>
+    }
+}
