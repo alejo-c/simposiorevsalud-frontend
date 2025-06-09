@@ -9,7 +9,7 @@ impl ApiService {
         if cfg!(debug_assertions) {
             "http://localhost:3000".to_string()
         } else {
-            "https://api.simposiorevsalud.univsalud.online".to_string()
+            "https://apisimposiorevsalud.univsalud.online".to_string()
         }
     }
 
@@ -22,7 +22,7 @@ impl ApiService {
     }
 
     pub async fn register(data: RegisterRequest) -> Result<String, String> {
-        let url = format!("{}/api/register", Self::get_base_url());
+        let url = format!("{}/register", Self::get_base_url());
 
         let response = Request::post(&url)
             .header("Content-Type", "application/json")
@@ -47,7 +47,7 @@ impl ApiService {
     }
 
     pub async fn login(data: LoginRequest) -> Result<String, String> {
-        let url = format!("{}/api/login", Self::get_base_url());
+        let url = format!("{}/login", Self::get_base_url());
 
         let response = Request::post(&url)
             .header("Content-Type", "application/json")
@@ -72,7 +72,7 @@ impl ApiService {
     }
 
     pub async fn update_user(data: UpdateUserRequest) -> Result<String, String> {
-        let url = format!("{}/api/user/update", Self::get_base_url());
+        let url = format!("{}/user/update", Self::get_base_url());
 
         let response = Self::add_auth_header(Request::put(&url))
             .header("Content-Type", "application/json")
@@ -97,7 +97,7 @@ impl ApiService {
     }
 
     pub async fn generate_horizontal_cert() -> Result<String, String> {
-        let url = format!("{}/api/user/horiz-cert", Self::get_base_url());
+        let url = format!("{}/user/horiz-cert", Self::get_base_url());
 
         let response = Self::add_auth_header(Request::put(&url))
             .send()
@@ -119,7 +119,7 @@ impl ApiService {
     }
 
     pub async fn generate_vertical_cert() -> Result<String, String> {
-        let url = format!("{}/api/user/vert-cert", Self::get_base_url());
+        let url = format!("{}/user/vert-cert", Self::get_base_url());
 
         let response = Self::add_auth_header(Request::put(&url))
             .send()
@@ -141,7 +141,7 @@ impl ApiService {
     }
 
     pub async fn admin_get_users() -> Result<Vec<User>, String> {
-        let url = format!("{}/api/admin/users", Self::get_base_url());
+        let url = format!("{}/admin/users", Self::get_base_url());
 
         let response = Self::add_auth_header(Request::post(&url))
             .send()
@@ -165,7 +165,7 @@ impl ApiService {
     }
 
     pub async fn admin_get_user(id: &str) -> Result<User, String> {
-        let url = format!("{}/api/admin/user", Self::get_base_url());
+        let url = format!("{}/admin/user", Self::get_base_url());
 
         let response = Self::add_auth_header(Request::post(&url))
             .body(id)
@@ -190,7 +190,7 @@ impl ApiService {
     }
 
     pub async fn admin_update_user(data: AdminUpdateUserRequest) -> Result<String, String> {
-        let url = format!("{}/api/admin/update", Self::get_base_url());
+        let url = format!("{}/admin/update", Self::get_base_url());
 
         let response = Self::add_auth_header(Request::put(&url))
             .header("Content-Type", "application/json")
@@ -217,7 +217,7 @@ impl ApiService {
     }
 
     pub async fn delete_user(data: DeleteUserRequest) -> Result<String, String> {
-        let url = format!("{}/api/user/delete", Self::get_base_url());
+        let url = format!("{}/user/delete", Self::get_base_url());
 
         let response = Self::add_auth_header(Request::delete(&url))
             .header("Content-Type", "application/json")
@@ -244,7 +244,7 @@ impl ApiService {
     }
 
     pub async fn logout() -> Result<(), String> {
-        let url = format!("{}/api/auth/logout", Self::get_base_url());
+        let url = format!("{}/logout", Self::get_base_url());
 
         let response = Self::add_auth_header(Request::post(&url))
             .send()
