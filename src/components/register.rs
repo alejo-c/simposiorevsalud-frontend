@@ -16,6 +16,45 @@ pub fn register() -> Html {
     let attendance = use_state(|| "remote".to_string());
     let message = use_state(|| String::new());
 
+    // Debug button handlers
+    let on_test_connection = {
+        let message = message.clone();
+        Callback::from(move |_: MouseEvent| {
+            let message = message.clone();
+            spawn_local(async move {
+                match ApiService::test_api_connection().await {
+                    Ok(result) => {
+                        log::info!("Connection test: {}", result);
+                        message.set(format!("Connection test: {}", result));
+                    }
+                    Err(error) => {
+                        log::error!("Connection test failed: {}", error);
+                        message.set(format!("Connection test failed: {}", error));
+                    }
+                }
+            });
+        })
+    };
+
+    let on_test_options = {
+        let message = message.clone();
+        Callback::from(move |_: MouseEvent| {
+            let message = message.clone();
+            spawn_local(async move {
+                match ApiService::test_options_request().await {
+                    Ok(result) => {
+                        log::info!("OPTIONS test: {}", result);
+                        message.set(format!("OPTIONS test: {}", result));
+                    }
+                    Err(error) => {
+                        log::error!("OPTIONS test failed: {}", error);
+                        message.set(format!("OPTIONS test failed: {}", error));
+                    }
+                }
+            });
+        })
+    };
+
     let on_email_change = {
         let email = email.clone();
         let message = message.clone();
@@ -133,6 +172,25 @@ pub fn register() -> Html {
             <h1>{"Registro"}</h1>
 
             <section>
+                // Debug buttons - remove these after fixing the issue
+                <div style="margin-bottom: 20px; padding: 10px; background-color: #f0f0f0; border-radius: 5px;">
+                    <h3>{"Debug Tests"}</h3>
+                    <button
+                        type="button"
+                        onclick={on_test_connection}
+                        style="margin-right: 10px; background-color: #007bff; color: white; padding: 5px 10px; border: none; border-radius: 3px;"
+                    >
+                        {"Test Connection"}
+                    </button>
+                    <button
+                        type="button"
+                        onclick={on_test_options}
+                        style="background-color: #28a745; color: white; padding: 5px 10px; border: none; border-radius: 3px;"
+                    >
+                        {"Test OPTIONS"}
+                    </button>
+                </div>
+
                 <form onsubmit={on_submit}>
                     <div class="form-group">
                         <label for="email-input">{"Correo electrónico:"}</label>
