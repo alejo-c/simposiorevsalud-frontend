@@ -4,7 +4,7 @@ dist = "dist"
 
 [[proxy]]
 rewrite = "/api/"
-backend = "http://localhost:3000/"
+backend = "https://apisimposiorevsalud.univsalud.online"
 
 [serve]
 address = "127.0.0.1"
@@ -13,3 +13,4 @@ open = true
 
 [watch]
 watch = ["src", "index.html", "static"]
+
