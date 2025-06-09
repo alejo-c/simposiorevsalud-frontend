@@ -2,10 +2,6 @@
 target = "index.html"
 dist = "dist"
 
-# Add this section for static assets
-[build.public_dir]
-dir = "static"
-
 [[proxy]]
 rewrite = "/api/"
 backend = "http://localhost:3000/"

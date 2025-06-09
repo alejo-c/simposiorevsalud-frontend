@@ -92,7 +92,7 @@ pub fn admin_users() -> Html {
                         UserRole::Simple(ref role) => role.clone(),
                         UserRole::Speaker { .. } => "speaker".to_string(),
                     },
-                    hours: user.hours.unwrap_or(0),
+                    presentation: user.presentation.unwrap_or(String::new()),
                     attendance: user.attendance,
                 };
 
@@ -132,7 +132,9 @@ pub fn admin_users() -> Html {
                 };
                 (display.to_string(), "-".to_string())
             }
-            UserRole::Speaker { speaker } => ("Ponente".to_string(), speaker.hours.to_string()),
+            UserRole::Speaker { speaker } => {
+                ("Ponente".to_string(), speaker.presentation.to_string())
+            }
         }
     };
 
@@ -189,7 +191,7 @@ pub fn admin_users() -> Html {
                                     }
                                 } else {
                                     users.iter().map(|user| {
-                                        let (role_display, hours_display) = get_role_display(user);
+                                        let (role_display, presentation_display) = get_role_display(user);
                                         let user_clone = user.clone();
                                         let on_delete = on_delete_click.clone();
                                         let is_deleting = deleting_user.as_ref() == Some(&user.id);
@@ -201,7 +203,7 @@ pub fn admin_users() -> Html {
                                                 <td>{&user.full_name}</td>
                                                 <td>{&user.identification}</td>
                                                 <td>{role_display}</td>
-                                                <td>{hours_display}</td>
+                                                <td>{presentation_display}</td>
                                                 <td>{get_attendance_display(&user.attendance)}</td>
                                                 <td>{get_cert_display(user.cert_generated.horizontal)}</td>
                                                 <td>{get_cert_display(user.cert_generated.vertical)}</td>

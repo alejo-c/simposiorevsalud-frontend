@@ -14,7 +14,7 @@ pub fn admin_register() -> Html {
     let password = use_state(|| String::new());
     let repeated_password = use_state(|| String::new());
     let role = use_state(|| "attendee".to_string());
-    let hours = use_state(|| 0u8);
+    let presentation = use_state(|| String::new());
     let attendance = use_state(|| "remote".to_string());
     let message = use_state(|| String::new());
 
@@ -26,7 +26,7 @@ pub fn admin_register() -> Html {
         let password = password.clone();
         let repeated_password = repeated_password.clone();
         let role = role.clone();
-        let hours = hours.clone();
+        let presentation = presentation.clone();
         let attendance = attendance.clone();
 
         use_effect_with_deps(
@@ -38,7 +38,7 @@ pub fn admin_register() -> Html {
                 password.set("T3stexampl*".to_string());
                 repeated_password.set("T3stexampl*".to_string());
                 role.set("attendee".to_string());
-                hours.set(2);
+                presentation.set(String::new());
                 attendance.set("remote".to_string());
                 || ()
             },
@@ -104,14 +104,12 @@ pub fn admin_register() -> Html {
         })
     };
 
-    let on_hours_change = {
-        let hours = hours.clone();
+    let on_presentation_change = {
+        let presentation = presentation.clone();
         let message = message.clone();
         Callback::from(move |e: Event| {
             let input: HtmlInputElement = e.target_unchecked_into();
-            if let Ok(value) = input.value().parse::<u8>() {
-                hours.set(value);
-            }
+            presentation.set(input.value());
             message.set(String::new());
         })
     };
@@ -131,7 +129,7 @@ pub fn admin_register() -> Html {
         let password = password.clone();
         let repeated_password = repeated_password.clone();
         let role = role.clone();
-        let hours = hours.clone();
+        let presentation = presentation.clone();
         let attendance = attendance.clone();
         let message = message.clone();
 
@@ -144,7 +142,7 @@ pub fn admin_register() -> Html {
             let password_val = (*password).clone();
             let repeated_password_val = (*repeated_password).clone();
             let role_val = (*role).clone();
-            let hours_val = *hours;
+            let presentation_val = (*presentation).clone();
             let attendance_val = (*attendance).clone();
             let message = message.clone();
 
@@ -164,7 +162,7 @@ pub fn admin_register() -> Html {
                 identification: identification_val,
                 password: password_val,
                 role: role_val,
-                hours: hours_val,
+                presentation: presentation_val,
                 attendance: attendance_val,
             };
 
@@ -263,8 +261,8 @@ pub fn admin_register() -> Html {
                             type="number"
                             id="hours-input"
                             class="form-input"
-                            value={hours.to_string()}
-                            onchange={on_hours_change}
+                            value={presentation.to_string()}
+                            onchange={on_presentation_change}
                         />
                     </div>
 

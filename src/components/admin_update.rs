@@ -25,7 +25,7 @@ pub fn admin_update(props: &AdminUpdateProps) -> Html {
     let identification = use_state(|| String::new());
     let password = use_state(|| String::new());
     let role = use_state(|| String::new());
-    let hours = use_state(|| 0u8);
+    let presentation = use_state(|| String::new());
     let attendance = use_state(|| String::new());
     let message = use_state(|| String::new());
     let loading = use_state(|| true);
@@ -38,7 +38,7 @@ pub fn admin_update(props: &AdminUpdateProps) -> Html {
         let full_name = full_name.clone();
         let identification = identification.clone();
         let role = role.clone();
-        let hours = hours.clone();
+        let presentation = presentation.clone();
         let attendance = attendance.clone();
         let message = message.clone();
         let loading = loading.clone();
@@ -57,11 +57,11 @@ pub fn admin_update(props: &AdminUpdateProps) -> Html {
                             match &user_data.role {
                                 crate::types::UserRole::Simple(r) => {
                                     role.set(r.clone());
-                                    hours.set(0);
+                                    presentation.set(String::new());
                                 }
                                 crate::types::UserRole::Speaker { speaker } => {
                                     role.set("speaker".to_string());
-                                    hours.set(speaker.hours);
+                                    presentation.set(speaker.presentation.clone());
                                 }
                             }
 
@@ -121,13 +121,11 @@ pub fn admin_update(props: &AdminUpdateProps) -> Html {
         })
     };
 
-    let on_hours_change = {
-        let hours = hours.clone();
+    let on_presentation_change = {
+        let presentation = presentation.clone();
         Callback::from(move |e: Event| {
             let input: HtmlInputElement = e.target_unchecked_into();
-            if let Ok(value) = input.value().parse::<u8>() {
-                hours.set(value);
-            }
+            presentation.set(input.value());
         })
     };
 
@@ -146,7 +144,7 @@ pub fn admin_update(props: &AdminUpdateProps) -> Html {
         let identification = identification.clone();
         let password = password.clone();
         let role = role.clone();
-        let hours = hours.clone();
+        let presentation = presentation.clone();
         let attendance = attendance.clone();
         let message = message.clone();
         let navigator = navigator.clone();
@@ -160,7 +158,7 @@ pub fn admin_update(props: &AdminUpdateProps) -> Html {
             let identification_val = (*identification).clone();
             let password_val = (*password).clone();
             let role_val = (*role).clone();
-            let hours_val = *hours;
+            let presentation_val = (*presentation).to_string();
             let attendance_val = (*attendance).clone();
             let message = message.clone();
             let navigator = navigator.clone();
@@ -178,7 +176,7 @@ pub fn admin_update(props: &AdminUpdateProps) -> Html {
                 identification: identification_val,
                 password: password_val,
                 role: role_val,
-                hours: hours_val,
+                presentation: presentation_val,
                 attendance: attendance_val,
             };
 
@@ -284,13 +282,13 @@ pub fn admin_update(props: &AdminUpdateProps) -> Html {
                         {if *role == "speaker" {
                             html! {
                                 <div class="form-group">
-                                    <label for="hours">{"Horas de ponencia:"}</label>
+                                    <label for="presentation">{"Horas de ponencia:"}</label>
                                     <input
                                         type="number"
-                                        id="hours"
+                                        id="presentation"
                                         class="form-input"
-                                        value={hours.to_string()}
-                                        onchange={on_hours_change}
+                                        value={presentation.to_string()}
+                                        onchange={on_presentation_change}
                                     />
                                 </div>
                             }

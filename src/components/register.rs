@@ -110,7 +110,7 @@ pub fn register() -> Html {
                 identification: identification_val,
                 password: password_val,
                 role: "attendee".to_string(),
-                hours: 0,
+                presentation: String::new(),
                 attendance: attendance_val,
             };
 
