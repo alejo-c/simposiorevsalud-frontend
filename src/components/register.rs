@@ -1,270 +1,188 @@
-use wasm_bindgen_futures::spawn_local;
-use web_sys::HtmlInputElement;
-use yew::prelude::*;
+use serde::{Deserialize, Serialize};
+use wasm_bindgen::prelude::*;
+use web_sys::{js_sys, window};
 
-use crate::services::api::ApiService;
-use crate::types::RegisterRequest;
-use crate::utils::validate_password;
+#[wasm_bindgen]
+extern "C" {
+    // Netlify Identity Widget bindings
+    #[wasm_bindgen(js_namespace = netlifyIdentity)]
+    fn init();
 
-#[function_component(Register)]
-pub fn register() -> Html {
-    let email = use_state(|| String::new());
-    let full_name = use_state(|| String::new());
-    let identification = use_state(|| String::new());
-    let password = use_state(|| String::new());
-    let repeated_password = use_state(|| String::new());
-    let attendance = use_state(|| "remote".to_string());
-    let message = use_state(|| String::new());
+    #[wasm_bindgen(js_namespace = netlifyIdentity)]
+    fn open();
 
-    // Debug button handlers
-    let on_test_connection = {
-        let message = message.clone();
-        Callback::from(move |_: MouseEvent| {
-            let message = message.clone();
-            spawn_local(async move {
-                match ApiService::test_api_connection().await {
-                    Ok(result) => {
-                        log::info!("Connection test: {}", result);
-                        message.set(format!("Connection test: {}", result));
-                    }
-                    Err(error) => {
-                        log::error!("Connection test failed: {}", error);
-                        message.set(format!("Connection test failed: {}", error));
-                    }
-                }
-            });
-        })
-    };
+    #[wasm_bindgen(js_namespace = netlifyIdentity)]
+    fn close();
 
-    let on_test_options = {
-        let message = message.clone();
-        Callback::from(move |_: MouseEvent| {
-            let message = message.clone();
-            spawn_local(async move {
-                match ApiService::test_options_request().await {
-                    Ok(result) => {
-                        log::info!("OPTIONS test: {}", result);
-                        message.set(format!("OPTIONS test: {}", result));
-                    }
-                    Err(error) => {
-                        log::error!("OPTIONS test failed: {}", error);
-                        message.set(format!("OPTIONS test failed: {}", error));
-                    }
-                }
-            });
-        })
-    };
+    #[wasm_bindgen(js_namespace = netlifyIdentity)]
+    fn currentUser() -> JsValue;
 
-    let on_email_change = {
-        let email = email.clone();
-        let message = message.clone();
-        Callback::from(move |e: Event| {
-            let input: HtmlInputElement = e.target_unchecked_into();
-            email.set(input.value());
-            message.set(String::new());
-        })
-    };
+    #[wasm_bindgen(js_namespace = netlifyIdentity)]
+    fn logout();
 
-    let on_full_name_change = {
-        let full_name = full_name.clone();
-        let message = message.clone();
-        Callback::from(move |e: Event| {
-            let input: HtmlInputElement = e.target_unchecked_into();
-            full_name.set(input.value());
-            message.set(String::new());
-        })
-    };
+    #[wasm_bindgen(js_namespace = netlifyIdentity, js_name = on)]
+    fn on(event: &str, callback: &js_sys::Function);
+}
 
-    let on_identification_change = {
-        let identification = identification.clone();
-        let message = message.clone();
-        Callback::from(move |e: Event| {
-            let input: HtmlInputElement = e.target_unchecked_into();
-            identification.set(input.value());
-            message.set(String::new());
-        })
-    };
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NetlifyUser {
+    pub id: String,
+    pub email: String,
+    pub user_metadata: UserMetadata,
+    pub app_metadata: AppMetadata,
+}
 
-    let on_password_change = {
-        let password = password.clone();
-        let message = message.clone();
-        Callback::from(move |e: Event| {
-            let input: HtmlInputElement = e.target_unchecked_into();
-            password.set(input.value());
-            message.set(String::new());
-        })
-    };
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct UserMetadata {
+    pub full_name: Option<String>,
+    pub identification: Option<String>,
+    pub role: Option<String>,
+    pub attendance: Option<String>,
+    pub certificates: Option<Vec<String>>,
+}
 
-    let on_repeated_password_change = {
-        let repeated_password = repeated_password.clone();
-        let message = message.clone();
-        Callback::from(move |e: Event| {
-            let input: HtmlInputElement = e.target_unchecked_into();
-            repeated_password.set(input.value());
-            message.set(String::new());
-        })
-    };
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct AppMetadata {
+    pub roles: Option<Vec<String>>,
+}
 
-    let on_attendance_change = {
-        let attendance = attendance.clone();
-        Callback::from(move |e: Event| {
-            let input: HtmlInputElement = e.target_unchecked_into();
-            attendance.set(input.value());
-        })
-    };
+pub struct AuthService;
 
-    let on_submit = {
-        let email = email.clone();
-        let full_name = full_name.clone();
-        let identification = identification.clone();
-        let password = password.clone();
-        let repeated_password = repeated_password.clone();
-        let attendance = attendance.clone();
-        let message = message.clone();
+impl AuthService {
+    pub fn init() {
+        init();
 
-        Callback::from(move |e: SubmitEvent| {
-            e.prevent_default();
+        // Set up event listeners
+        let login_callback = Closure::wrap(Box::new(|user: JsValue| {
+            log::info!("User logged in: {:?}", user);
+            Self::store_user_locally(&user);
+        }) as Box<dyn Fn(JsValue)>);
 
-            let email_val = (*email).clone();
-            let full_name_val = (*full_name).clone();
-            let identification_val = (*identification).clone();
-            let password_val = (*password).clone();
-            let repeated_password_val = (*repeated_password).clone();
-            let attendance_val = (*attendance).clone();
-            let message = message.clone();
+        let logout_callback = Closure::wrap(Box::new(|| {
+            log::info!("User logged out");
+            Self::clear_user_locally();
+        }) as Box<dyn Fn()>);
 
-            if !validate_password(&password_val) || !validate_password(&repeated_password_val) {
-                message.set("Contraseña no valida".to_string());
-                return;
+        on("login", login_callback.as_ref().unchecked_ref());
+        on("logout", logout_callback.as_ref().unchecked_ref());
+
+        // Don't forget these or memory will leak
+        login_callback.forget();
+        logout_callback.forget();
+    }
+
+    pub fn open_auth() {
+        open();
+    }
+
+    pub fn logout_user() {
+        logout();
+        Self::clear_user_locally();
+    }
+
+    pub fn get_current_user() -> Option<NetlifyUser> {
+        let user_js = currentUser();
+
+        if user_js.is_null() || user_js.is_undefined() {
+            // Try to get from local storage
+            return Self::get_user_from_storage();
+        }
+
+        // Convert JS user to Rust struct
+        match serde_wasm_bindgen::from_value::<NetlifyUser>(user_js) {
+            Ok(user) => {
+                Self::store_user_locally(&serde_wasm_bindgen::to_value(&user).unwrap());
+                Some(user)
+            }
+            Err(e) => {
+                log::error!("Failed to parse user: {:?}", e);
+                None
+            }
+        }
+    }
+
+    pub fn is_authenticated() -> bool {
+        Self::get_current_user().is_some()
+    }
+
+    pub fn is_admin() -> bool {
+        if let Some(user) = Self::get_current_user() {
+            // Check app_metadata roles
+            if let Some(roles) = user.app_metadata.roles {
+                return roles.contains(&"admin".to_string());
             }
 
-            if password_val != repeated_password_val {
-                message.set("Contraseñas no coinciden".to_string());
-                return;
+            // Fallback to user_metadata role
+            if let Some(role) = user.user_metadata.role {
+                return role == "admin";
             }
+        }
+        false
+    }
 
-            let data = RegisterRequest {
-                email: email_val,
-                full_name: full_name_val,
-                identification: identification_val,
-                password: password_val,
-                role: "attendee".to_string(),
-                presentation: String::new(),
-                attendance: attendance_val,
-            };
+    // Update user metadata (for registration completion)
+    pub async fn update_user_metadata(metadata: UserMetadata) -> Result<(), String> {
+        let user = Self::get_current_user().ok_or("No user logged in")?;
 
-            spawn_local(async move {
-                match ApiService::register(data).await {
-                    Ok(response) => {
-                        log::info!("Success: {}", response);
-                        message.set("Registro exitoso".to_string());
-                    }
-                    Err(error) => {
-                        message.set(error);
-                    }
+        // In a real implementation, you'd call Netlify's API to update user metadata
+        // For now, we'll store it locally and send via EmailJS
+        let window = window().unwrap();
+        let storage = window.local_storage().unwrap().unwrap();
+
+        let updated_user = NetlifyUser {
+            user_metadata: metadata,
+            ..user
+        };
+
+        let user_json = serde_json::to_string(&updated_user)
+            .map_err(|e| format!("Failed to serialize user: {}", e))?;
+
+        storage
+            .set_item("netlify_user_extended", &user_json)
+            .map_err(|e| format!("Failed to store user: {:?}", e))?;
+
+        Ok(())
+    }
+
+    fn store_user_locally(user_js: &JsValue) {
+        if let Some(window) = window() {
+            if let Ok(Some(storage)) = window.local_storage() {
+                if let Ok(user_str) = js_sys::JSON::stringify(user_js) {
+                    let _ = storage.set_item("netlify_user", &user_str.as_string().unwrap());
                 }
-            });
-        })
-    };
+            }
+        }
+    }
 
-    html! {
-        <>
-            <h1>{"Registro"}</h1>
+    fn clear_user_locally() {
+        if let Some(window) = window() {
+            if let Ok(Some(storage)) = window.local_storage() {
+                let _ = storage.remove_item("netlify_user");
+                let _ = storage.remove_item("netlify_user_extended");
+            }
+        }
+    }
 
-            <section>
-                // Debug buttons - remove these after fixing the issue
-                <div style="margin-bottom: 20px; padding: 10px; background-color: #f0f0f0; border-radius: 5px;">
-                    <h3>{"Debug Tests"}</h3>
-                    <button
-                        type="button"
-                        onclick={on_test_connection}
-                        style="margin-right: 10px; background-color: #007bff; color: white; padding: 5px 10px; border: none; border-radius: 3px;"
-                    >
-                        {"Test Connection"}
-                    </button>
-                    <button
-                        type="button"
-                        onclick={on_test_options}
-                        style="background-color: #28a745; color: white; padding: 5px 10px; border: none; border-radius: 3px;"
-                    >
-                        {"Test OPTIONS"}
-                    </button>
-                </div>
+    fn get_user_from_storage() -> Option<NetlifyUser> {
+        let window = window()?;
+        let storage = window.local_storage().ok()??;
 
-                <form onsubmit={on_submit}>
-                    <div class="form-group">
-                        <label for="email-input">{"Correo electrónico:"}</label>
-                        <input
-                            type="email"
-                            id="email-input"
-                            class="form-input"
-                            required={true}
-                            minlength="5"
-                            value={(*email).clone()}
-                            onchange={on_email_change}
-                        />
-                    </div>
-                    <div class="form-group">
-                        <label for="full-name-input">{"Nombre completo:"}</label>
-                        <input
-                            type="text"
-                            id="full-name-input"
-                            class="form-input"
-                            required={true}
-                            value={(*full_name).clone()}
-                            onchange={on_full_name_change}
-                        />
-                    </div>
-                    <div class="form-group">
-                        <label for="id-input">{"Documento de identificación:"}</label>
-                        <input
-                            type="text"
-                            id="id-input"
-                            class="form-input"
-                            required={true}
-                            value={(*identification).clone()}
-                            onchange={on_identification_change}
-                        />
-                    </div>
-                    <div class="form-group">
-                        <label for="password-input">{"Contraseña:"}</label>
-                        <input
-                            type="password"
-                            id="password-input"
-                            class="form-input"
-                            required={true}
-                            minlength="8"
-                            value={(*password).clone()}
-                            onchange={on_password_change}
-                        />
-                    </div>
-                    <div class="form-group">
-                        <label for="repeat-password-input">{"Repita contraseña:"}</label>
-                        <input
-                            type="password"
-                            id="repeat-password-input"
-                            class="form-input"
-                            required={true}
-                            minlength="8"
-                            value={(*repeated_password).clone()}
-                            onchange={on_repeated_password_change}
-                        />
-                    </div>
-                    <div class="form-group">
-                        <label for="attendance-select">{"Tipo de asistencia:"}</label>
-                        <select id="attendance-select" value={(*attendance).clone()} onchange={on_attendance_change}>
-                            <option value="remote">{"Remota"}</option>
-                            <option value="presential">{"Presencial"}</option>
-                        </select>
-                    </div>
+        // Try extended user first
+        if let Ok(Some(user_json)) = storage.get_item("netlify_user_extended") {
+            if let Ok(user) = serde_json::from_str::<NetlifyUser>(&user_json) {
+                return Some(user);
+            }
+        }
 
-                    <div>
-                        <span id="message-span">{(*message).clone()}</span>
-                    </div>
+        // Fallback to basic netlify user
+        if let Ok(Some(user_str)) = storage.get_item("netlify_user") {
+            if let Ok(user_js) = js_sys::JSON::parse(&user_str) {
+                if let Ok(user) = serde_wasm_bindgen::from_value::<NetlifyUser>(user_js) {
+                    return Some(user);
+                }
+            }
+        }
 
-                    <button type="submit" id="register-btn">{"Registrarse"}</button>
-                </form>
-            </section>
-        </>
+        None
     }
 }

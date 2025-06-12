@@ -1,6 +1,6 @@
+pub mod admin_panel;
 pub mod admin_register;
 pub mod admin_update;
-pub mod admin_users;
 pub mod certificates;
 pub mod home;
 pub mod login;
@@ -9,9 +9,9 @@ pub mod profile;
 pub mod protected_route;
 pub mod register;
 
+pub use admin_panel::AdminPanel;
 pub use admin_register::AdminRegister;
 pub use admin_update::AdminUpdate;
-pub use admin_users::AdminUsers;
 pub use certificates::Certificates;
 pub use home::Home;
 pub use login::Login;

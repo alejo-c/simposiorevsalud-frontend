@@ -6,7 +6,7 @@ use crate::routes::Route;
 use crate::services::api::ApiService;
 use crate::types::{DeleteUserRequest, User, UserRole};
 
-#[function_component(AdminUsers)]
+#[function_component(AdminPanel)]
 pub fn admin_users() -> Html {
     let navigator = use_navigator().expect("Navigator not found");
     let users = use_state(|| Vec::<User>::new());
