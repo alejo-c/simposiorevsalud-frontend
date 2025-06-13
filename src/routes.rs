@@ -15,8 +15,8 @@ pub enum Route {
     Profile,
     #[at("/constancias")]
     Certificates,
-    #[at("/admin/usuarios")]
-    AdminUsers,
+    #[at("/admin")]
+    AdminPanel,
     #[at("/admin/registro")]
     AdminRegister,
     #[at("/admin/usuario/:id")]
@@ -45,9 +45,9 @@ pub fn switch(route: Route) -> Html {
                 <Certificates />
             </ProtectedRoute>
         },
-        Route::AdminUsers => html! {
+        Route::AdminPanel => html! {
             <ProtectedRoute>
-                <AdminUsers />
+                <AdminPanel />
             </ProtectedRoute>
         },
         Route::AdminRegister => html! {

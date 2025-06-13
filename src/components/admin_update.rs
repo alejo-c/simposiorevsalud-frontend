@@ -183,7 +183,7 @@ pub fn admin_update(props: &AdminUpdateProps) -> Html {
             spawn_local(async move {
                 match ApiService::admin_update_user(data).await {
                     Ok(_) => {
-                        navigator.push(&Route::AdminUsers);
+                        navigator.push(&Route::AdminPanel);
                     }
                     Err(error) => {
                         message.set(error);
@@ -196,7 +196,7 @@ pub fn admin_update(props: &AdminUpdateProps) -> Html {
     let on_cancel = {
         let navigator = navigator.clone();
         Callback::from(move |_: MouseEvent| {
-            navigator.push(&Route::AdminUsers);
+            navigator.push(&Route::AdminPanel);
         })
     };
 

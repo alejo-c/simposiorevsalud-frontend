@@ -1,5 +1,3 @@
-use regex::Regex;
-
 pub fn validate_password(password: &str) -> bool {
     // Check minimum length
     if password.len() < 8 {
